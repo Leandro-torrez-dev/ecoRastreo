@@ -12,7 +12,7 @@ const mapa = L.map('map', {
   maxBounds: limitesNicaragua,
   maxBoundsViscosity: 1.0, 
   minZoom: 7,
-  closePopupOnClick: true
+  closePopupOnClick: true 
 }).setView([12.0805, -86.0175], 14); 
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -68,7 +68,6 @@ function crearContenidoPopup(especie: any): string {
 function renderizarMarcadorEnMapa(especie: any) {
   const claseColor = obtenerClaseMarcador(especie);
   
-  // MEJORADO: Tamaño a 32x32 píxeles para clicks perfectos en PC y móvil
   const iconoPersonalizado = L.divIcon({
     className: `puntero-mapa-circular ${claseColor}`,
     iconSize: [32, 32],
@@ -82,10 +81,8 @@ function renderizarMarcadorEnMapa(especie: any) {
 
 // Cargar marcadores iniciales y persistidos
 function cargarTodosLosMarcadores() {
-  // 1. Datos fijos de los chicos
   especiesNicaragua.forEach(especie => renderizarMarcadorEnMapa(especie));
 
-  // 2. NUEVO: Cargar reportes guardados en localStorage para que no se borren
   const reportesPersistidos = localStorage.getItem('ecoRastreo_reportes');
   if (reportesPersistidos) {
     const listaReportes = JSON.parse(reportesPersistidos);
@@ -122,7 +119,6 @@ inputFoto.addEventListener('change', () => {
   if (inputFoto.files && inputFoto.files[0]) {
     fileNamePreview.textContent = `Archivo: ${inputFoto.files[0].name}`;
     
-    // Convertir foto a Base64 para poder guardarla de forma segura en el localStorage
     const reader = new FileReader();
     reader.onloadend = () => {
       imgPreview.src = reader.result as string;
@@ -139,7 +135,8 @@ btnNuevo.addEventListener('click', () => {
   modalReporte.classList.remove('hidden');
 });
 
-mapa.on('click', (e) => {
+// CAMBIADO: Reemplazamos 'click' por 'contextmenu' (Se activa dejando presionado en móvil o clic derecho en PC)
+mapa.on('contextmenu', (e) => {
   inputLat.value = e.latlng.lat.toFixed(6);
   inputLng.value = e.latlng.lng.toFixed(6);
   modalReporte.classList.remove('hidden');
@@ -162,7 +159,6 @@ formReporte.addEventListener('submit', (e) => {
   const lat = parseFloat(inputLat.value);
   const lng = parseFloat(inputLng.value);
 
-  // Si no suben imagen, ponemos un backup
   const urlImagen = imgPreview.src || "https://images.unsplash.com/photo-1500485035595-cbe6f645feb1?w=500";
 
   const nuevoAvistamiento: any = {
@@ -177,10 +173,8 @@ formReporte.addEventListener('submit', (e) => {
     fecha: new Date().toLocaleString('es-NI', { dateStyle: 'medium', timeStyle: 'short' })
   };
 
-  // 1. Pintar inmediatamente en el mapa
   renderizarMarcadorEnMapa(nuevoAvistamiento);
   
-  // 2. NUEVO: Almacenar en la lista de localStorage para persistir entre recargas
   const reportesActuales = localStorage.getItem('ecoRastreo_reportes');
   const listaReportes = reportesActuales ? JSON.parse(reportesActuales) : [];
   listaReportes.push(nuevoAvistamiento);
