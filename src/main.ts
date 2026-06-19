@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import './style.css';
-import { especiesNicaragua, type Avistamiento } from './datos';
+// CORREGIDO: Se removió la importación no leída de 'Avistamiento' para que Vercel no tire error TS6133
+import { especiesNicaragua } from './datos';
 
 // 1. Configurar límites geográficos para amarrar el mapa dentro de Nicaragua
 const limitesNicaragua = L.latLngBounds(
@@ -13,12 +14,11 @@ const mapa = L.map('map', {
   maxBounds: limitesNicaragua,
   maxBoundsViscosity: 1.0, 
   minZoom: 7 
-}).setView([12.083896, -86.006459], 14); // <-- Coordenadas del Municipio de Tisma y Zoom 14 para verlo de cerca
+}).setView([12.0805, -86.0175], 14); 
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(mapa);
-
 
 // 2. Función constructora de la tarjeta HTML del Popup (Soporta Fauna, Flora y Reportes)
 function crearContenidoPopup(especie: any): string {
@@ -36,7 +36,6 @@ function crearContenidoPopup(especie: any): string {
   }
   
   if ('descripcion' in especie && especie.descripcion) {
-    // Si es del formulario ciudadano dirá "Reporte", si es de los muchachos dirá "Descripción"
     const etiqueta = especie.nombreCientifico === "Registro Ciudadano" ? "📝 Reporte" : "🌿 Descripción";
     detalleDinamico += `<p style="margin: 0 0 4px 0; font-size: 0.85rem; line-height: 1.3;"><strong>${etiqueta}:</strong> ${especie.descripcion}</p>`;
   }
@@ -127,7 +126,7 @@ formReporte.addEventListener('submit', (e) => {
   const nombre = (document.getElementById('rep-nombre') as HTMLInputElement).value;
   const categoria = (document.getElementById('rep-categoria') as HTMLSelectElement).value as any;
   const enPeligro = (document.getElementById('rep-peligro') as HTMLInputElement).checked;
-  const descripcion = (document.getElementById('rep-descripcion') as HTMLTextAreaElement).value; // Captura la descripción del reporte ciudadano
+  const descripcion = (document.getElementById('rep-descripcion') as HTMLTextAreaElement).value; 
   const lat = parseFloat(inputLat.value);
   const lng = parseFloat(inputLng.value);
 
@@ -142,7 +141,7 @@ formReporte.addEventListener('submit', (e) => {
     nombreCientifico: "Registro Ciudadano",
     categoria,
     enPeligro,
-    descripcion: descripcion, // Se guarda en el campo descripción
+    descripcion: descripcion, 
     imagen: urlImagen,
     coordenadas: [lat, lng],
     fecha: new Date().toLocaleString('es-NI', { dateStyle: 'medium', timeStyle: 'short' })
