@@ -1,13 +1,107 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ecorastreo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>EcoRastreo - Monitoreo Ambiental</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   </head>
   <body>
-    <div id="app"></div>
+    
+    <header class="app-header">
+      <h1>EcoRastreo 🌿</h1>
+      <button id="btn-nuevo" class="btn-primary">+ Reportar</button>
+    </header>
+
+    <main class="app-container">
+      <div id="map"></div>
+
+      <button id="btn-info" class="btn-info-float" title="Información de Conservación">❗️</button>
+
+      <div class="map-legend">
+        <h4>Leyenda</h4>
+        <ul>
+          <li><span class="dot native"></span> Especies Nativas</li>
+          <li><span class="dot fauna"></span> Fauna</li>
+          <li><span class="dot flora"></span> Flora</li>
+          <li><span class="dot peligro"></span> En Peligro Alerta</li>
+        </ul>
+      </div>
+    </main>
+
+    <div id="modal-info" class="modal hidden">
+      <div class="modal-content text-left">
+        <h3 style="color: #1e3f20; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          🏛️ Conservación y Protección: Nuestro Compromiso
+        </h3>
+        <p style="font-size: 0.95rem; line-height: 1.4; color: #333; margin-bottom: 12px;">
+          Para asegurar que las futuras generaciones disfruten de este paraíso ecológico, implementamos y promovemos las siguientes medidas de preservación:
+        </p>
+        <div style="background-color: #f1f8e9; padding: 12px; border-left: 4px solid #2e7d32; border-radius: 4px; margin-bottom: 16px;">
+          <h4 style="color: #2e7d32; margin-bottom: 6px;">1. Sistema Lagunar de Tisma (Sitio Ramsar 1141)</h4>
+          <p style="font-size: 0.9rem; line-height: 1.4; color: #555;">
+            Al ser un humedal de importancia internacional, su conservación es prioritaria para la biodiversidad global.
+          </p>
+          <p style="font-size: 0.9rem; line-height: 1.4; color: #555; margin-top: 8px;">
+            <strong>Protección de Aves Migratorias:</strong> Mantener el equilibrio del ecosistema acuático, ya que sirve como un punto crítico de descanso y alimentación para especies que viajan desde el norte, como la Avoceta americana y la Garza blanca.
+          </p>
+        </div>
+        <button type="button" id="btn-cerrar-info" class="btn-submit" style="width: 100%;">Entendido</button>
+      </div>
+    </div>
+
+    <div id="modal-reporte" class="modal hidden">
+      <div class="modal-content">
+        <h3>Registrar Avistamiento</h3>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 12px;">
+          💡 Tip: Puedes hacer clic directamente en cualquier parte del mapa de Nicaragua para capturar la ubicación de forma automática.
+        </p>
+        
+        <form id="form-reporte">
+          <label>Nombre de la especie:</label>
+          <input type="text" id="rep-nombre" required placeholder="Ej. Jaguar, Guardabarranco">
+          
+          <label>Categoría:</label>
+          <select id="rep-categoria">
+            <option value="fauna">Fauna</option>
+            <option value="flora">Flora</option>
+            <option value="reptil">Reptil</option>
+            <option value="mamifero">Mamífero</option>
+          </select>
+
+          <div style="display: flex; gap: 10px;">
+            <div>
+              <label>Latitud:</label>
+              <input type="number" step="any" id="rep-lat" required>
+            </div>
+            <div>
+              <label>Longitud:</label>
+              <input type="number" step="any" id="rep-lng" required>
+            </div>
+          </div>
+
+          <label>Descripción del avistamiento:</label>
+          <textarea id="rep-descripcion" rows="3" required placeholder="Ej. El espécimen se encontraba cerca del río buscando refugio..."></textarea>
+
+          <label>Foto del Avistamiento:</label>
+          <div class="file-upload-wrapper">
+            <label for="rep-foto" class="btn-file-custom">📸 Seleccionar Imagen</label>
+            <input type="file" id="rep-foto" accept="image/*" style="display: none;">
+            <span id="file-name-preview">Ningún archivo seleccionado</span>
+            
+            <img id="img-preview" src="" alt="Vista previa">
+          </div>
+
+          <label class="checkbox-danger-label">
+            <input type="checkbox" id="rep-peligro"> ¡Especie en Peligro!
+          </label>
+
+          <button type="submit" class="btn-submit">Añadir al mapa</button>
+          <button type="button" id="btn-cerrar-modal" class="btn-cancel">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
