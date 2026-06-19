@@ -47,7 +47,7 @@ body {
   height: 100%;
 }
 
-/* NUEVO: Botón Flotante Circular de Información */
+/* Botón Flotante Circular de Información */
 .btn-info-float {
   position: absolute;
   top: 90px;
@@ -230,4 +230,36 @@ body {
   text-align: center;
   font-size: 0.8rem;
   border-radius: 4px;
+}
+
+/* Punteros del mapa grandes (32px) y con fácil interacción */
+.puntero-mapa-circular {
+  border: 3px solid white !important;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+  cursor: pointer !important;
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s;
+}
+
+.puntero-mapa-circular:hover {
+  transform: scale(1.25);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  z-index: 10000 !important; 
+}
+
+.marcador-native { background-color: #2e7d32 !important; }  
+.marcador-fauna  { background-color: #0288d1 !important; }  
+.marcador-flora  { background-color: #81c784 !important; }  
+.marcador-peligro { background-color: #d32f2f !important; } 
+
+/* NUEVO: Efecto de desvanecimiento suave (Fade & Scale) para ventanas de Leaflet */
+.leaflet-popup {
+  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+  opacity: 0;
+  transform: scale(0.9) translateY(10px);
+}
+
+.leaflet-popup-animated {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }

@@ -155,5 +155,15 @@ export const especiesNicaragua: Avistamiento[] = [
     coordenadas: [12.092942, -85.986394],
     fecha: "Jun 18, 2026, 11:15 AM"
   },
-
+  {
+    id: 14,
+    nombre: "Zanatillo",
+    nombreCientifico: "Quiscalus nicaraguensis",
+    categoria: "fauna",
+    enPeligro: true,
+    descripcion: "​Esta pequeña ave es una de las joyas biológicas de la región y es endémica, lo que significa que solo vive en Nicaragua y pequeñas franjas limítrofes de Costa Rica. La Laguna de Tisma es uno de sus principales refugios históricos. Está perdiendo su hábitat de anidación (los pastizales inundados y humedales) a causa del avance ganadero y agrícola, lo que ha provocado que vuele directamente hacia la extinción",
+    imagen: "especies/Zanatillo.jpeg", 
+    coordenadas: [12.091840, -85.978451],
+    fecha: "Jun 18, 2026, 11:15 AM"
+  },
 ];

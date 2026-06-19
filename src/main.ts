@@ -1,26 +1,41 @@
 import L from 'leaflet';
 import './style.css';
-// CORREGIDO: Se removió la importación no leída de 'Avistamiento' para que Vercel no tire error TS6133
 import { especiesNicaragua } from './datos';
 
 // 1. Configurar límites geográficos para amarrar el mapa dentro de Nicaragua
 const limitesNicaragua = L.latLngBounds(
-  L.latLng(10.5000, -87.8000), // Sur-Oeste
-  L.latLng(15.1000, -82.5000)  // Norte-Este
+  L.latLng(10.5000, -87.8000), 
+  L.latLng(15.1000, -82.5000)  
 );
 
-// Inicialización del mapa restringido a nivel nacional, pero ENFOCADO EN TISMA
 const mapa = L.map('map', {
   maxBounds: limitesNicaragua,
   maxBoundsViscosity: 1.0, 
-  minZoom: 7 
+  minZoom: 7,
+  closePopupOnClick: true
 }).setView([12.0805, -86.0175], 14); 
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(mapa);
 
-// 2. Función constructora de la tarjeta HTML del Popup (Soporta Fauna, Flora y Reportes)
+// Función para determinar la clase CSS del marcador según su categoría y estado
+function obtenerClaseMarcador(especie: any): string {
+  if (especie.enPeligro) {
+    return 'marcador-peligro'; 
+  }
+  if (especie.nombreCientifico === "Registro Ciudadano") {
+    if (especie.categoria === 'flora') return 'marcador-flora';
+    return 'marcador-fauna';
+  }
+  if (especie.nombre === "Guardabarranco" || especie.nombre === "Sacuanjoche" || especie.nombre === "Madroño") {
+    return 'marcador-native'; 
+  }
+  if (especie.categoria === 'flora') return 'marcador-flora';
+  return 'marcador-fauna'; 
+}
+
+// Función constructora de la tarjeta HTML del Popup
 function crearContenidoPopup(especie: any): string {
   const seccionAlerta = especie.enPeligro 
     ? `<div class="alerta-peligro">
@@ -28,16 +43,12 @@ function crearContenidoPopup(especie: any): string {
        </div>`
     : '';
 
-  // Evaluamos dinámicamente qué campos tiene el objeto para mostrarlos en orden
   let detalleDinamico = '';
-  
   if ('alimentacion' in especie && especie.alimentacion) {
-    detalleDinamico += `<p style="margin: 0 0 4px 0; font-size: 0.85rem; line-height: 1.3;"><strong>🍎 Alimentación:</strong> ${especie.alimentacion}</p>`;
-  }
-  
-  if ('descripcion' in especie && especie.descripcion) {
+    detalleDinamico = `<p style="margin: 0 0 8px 0; font-size: 0.85rem; line-height: 1.3;"><strong>🍎 Alimentación:</strong> ${especie.alimentacion}</p>`;
+  } else if ('descripcion' in especie && especie.descripcion) {
     const etiqueta = especie.nombreCientifico === "Registro Ciudadano" ? "📝 Reporte" : "🌿 Descripción";
-    detalleDinamico += `<p style="margin: 0 0 4px 0; font-size: 0.85rem; line-height: 1.3;"><strong>${etiqueta}:</strong> ${especie.descripcion}</p>`;
+    detalleDinamico = `<p style="margin: 0 0 8px 0; font-size: 0.85rem; line-height: 1.3;"><strong>${etiqueta}:</strong> ${especie.descripcion}</p>`;
   }
 
   return `
@@ -53,15 +64,37 @@ function crearContenidoPopup(especie: any): string {
   `;
 }
 
-// 3. Renderizar todos los marcadores iniciales de la lista local
-function cargarMarcadoresIniciales() {
-  especiesNicaragua.forEach(especie => {
-    L.marker(especie.coordenadas).addTo(mapa).bindPopup(crearContenidoPopup(especie));
+// Inyectar un marcador con el tamaño corregido
+function renderizarMarcadorEnMapa(especie: any) {
+  const claseColor = obtenerClaseMarcador(especie);
+  
+  // MEJORADO: Tamaño a 32x32 píxeles para clicks perfectos en PC y móvil
+  const iconoPersonalizado = L.divIcon({
+    className: `puntero-mapa-circular ${claseColor}`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
-}
-cargarMarcadoresIniciales();
 
-// 4. Captura de Elementos del DOM e Interacciones
+  L.marker(especie.coordenadas, { icon: iconoPersonalizado })
+    .addTo(mapa)
+    .bindPopup(crearContenidoPopup(especie));
+}
+
+// Cargar marcadores iniciales y persistidos
+function cargarTodosLosMarcadores() {
+  // 1. Datos fijos de los chicos
+  especiesNicaragua.forEach(especie => renderizarMarcadorEnMapa(especie));
+
+  // 2. NUEVO: Cargar reportes guardados en localStorage para que no se borren
+  const reportesPersistidos = localStorage.getItem('ecoRastreo_reportes');
+  if (reportesPersistidos) {
+    const listaReportes = JSON.parse(reportesPersistidos);
+    listaReportes.forEach((rep: any) => renderizarMarcadorEnMapa(rep));
+  }
+}
+cargarTodosLosMarcadores();
+
+// Captura de Elementos del DOM e Interacciones
 const btnNuevo = document.getElementById('btn-nuevo') as HTMLButtonElement;
 const modalReporte = document.getElementById('modal-reporte') as HTMLDivElement;
 const btnCerrarModal = document.getElementById('btn-cerrar-modal') as HTMLButtonElement;
@@ -77,7 +110,6 @@ const btnInfo = document.getElementById('btn-info') as HTMLButtonElement;
 const modalInfo = document.getElementById('modal-info') as HTMLDivElement;
 const btnCerrarInfo = document.getElementById('btn-cerrar-info') as HTMLButtonElement;
 
-// Interacción del modal de información
 btnInfo.addEventListener('click', () => {
   modalInfo.classList.remove('hidden');
 });
@@ -86,32 +118,33 @@ btnCerrarInfo.addEventListener('click', () => {
   modalInfo.classList.add('hidden');
 });
 
-// Interactividad de la carga de imagen (Muestra el nombre y la miniatura)
 inputFoto.addEventListener('change', () => {
   if (inputFoto.files && inputFoto.files[0]) {
     fileNamePreview.textContent = `Archivo: ${inputFoto.files[0].name}`;
-    const urlTemporal = URL.createObjectURL(inputFoto.files[0]);
-    imgPreview.src = urlTemporal;
-    imgPreview.style.display = 'block';
+    
+    // Convertir foto a Base64 para poder guardarla de forma segura en el localStorage
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      imgPreview.src = reader.result as string;
+      imgPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(inputFoto.files[0]);
   } else {
     fileNamePreview.textContent = "Ningún archivo seleccionado";
     imgPreview.style.display = 'none';
   }
 });
 
-// Abrir modal manualmente con el botón superior derecho
 btnNuevo.addEventListener('click', () => {
   modalReporte.classList.remove('hidden');
 });
 
-// CAPTURA INTERACTIVA: El clic en el mapa extrae las coordenadas y despliega el formulario
 mapa.on('click', (e) => {
   inputLat.value = e.latlng.lat.toFixed(6);
   inputLng.value = e.latlng.lng.toFixed(6);
   modalReporte.classList.remove('hidden');
 });
 
-// Cancelar/Cerrar el formulario limpiando el rastro en memoria
 btnCerrarModal.addEventListener('click', () => {
   modalReporte.classList.add('hidden');
   formReporte.reset();
@@ -119,7 +152,6 @@ btnCerrarModal.addEventListener('click', () => {
   fileNamePreview.textContent = "Ningún archivo seleccionado";
 });
 
-// Procesar el envío del formulario de manera asíncrona controlada
 formReporte.addEventListener('submit', (e) => {
   e.preventDefault(); 
 
@@ -130,10 +162,8 @@ formReporte.addEventListener('submit', (e) => {
   const lat = parseFloat(inputLat.value);
   const lng = parseFloat(inputLng.value);
 
-  let urlImagen = "https://images.unsplash.com/photo-1500485035595-cbe6f645feb1?w=500"; 
-  if (inputFoto.files && inputFoto.files[0]) {
-    urlImagen = URL.createObjectURL(inputFoto.files[0]);
-  }
+  // Si no suben imagen, ponemos un backup
+  const urlImagen = imgPreview.src || "https://images.unsplash.com/photo-1500485035595-cbe6f645feb1?w=500";
 
   const nuevoAvistamiento: any = {
     id: Date.now(),
@@ -147,13 +177,20 @@ formReporte.addEventListener('submit', (e) => {
     fecha: new Date().toLocaleString('es-NI', { dateStyle: 'medium', timeStyle: 'short' })
   };
 
-  const nuevoMarcador = L.marker(nuevoAvistamiento.coordenadas).addTo(mapa);
-  nuevoMarcador.bindPopup(crearContenidoPopup(nuevoAvistamiento)).openPopup();
+  // 1. Pintar inmediatamente en el mapa
+  renderizarMarcadorEnMapa(nuevoAvistamiento);
   
-  mapa.setView(nuevoAvistamiento.coordenadas, 12);
+  // 2. NUEVO: Almacenar en la lista de localStorage para persistir entre recargas
+  const reportesActuales = localStorage.getItem('ecoRastreo_reportes');
+  const listaReportes = reportesActuales ? JSON.parse(reportesActuales) : [];
+  listaReportes.push(nuevoAvistamiento);
+  localStorage.setItem('ecoRastreo_reportes', JSON.stringify(listaReportes));
+
+  mapa.setView(nuevoAvistamiento.coordenadas, 14);
 
   modalReporte.classList.add('hidden');
   formReporte.reset();
   imgPreview.style.display = 'none';
+  imgPreview.src = "";
   fileNamePreview.textContent = "Ningún archivo seleccionado";
 });
